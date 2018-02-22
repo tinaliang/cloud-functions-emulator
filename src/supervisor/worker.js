@@ -15,6 +15,7 @@
 
 'use strict';
 
+const _ = require('lodash');
 const bodyParser = require('body-parser');
 const express = require('express');
 const fs = require('fs');
@@ -73,7 +74,11 @@ function main () {
 
     // Require the target module to load the function for invocation
     const functionModule = require(localdir);
-    const handler = functionModule[cloudfunction.entryPoint || name];
+    const bracketedName = name.split('-');
+    const nestedFunctionModule = _.reduce(bracketedName, function(funcMod, item) {
+      return funcMod[item];
+    }, functionModule);
+    const handler = functionModule[cloudfunction.entryPoint] || nestedFunctionModule || functionModule[name];
 
     if (!handler) {
       throw new Error(`No function found with name ${cloudfunction.entryPoint || name}`);
